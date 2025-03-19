@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: rfabflex
+Version: 0.1.0
+Summary: RoseTTAFoldAbFlex: Flexible Docking of Ab-Ag complex with RoseTTAFold2
+Home-page: https://github.com/YubeenKim/rf-abag-templ
+Author: Yubeen Kim
+Author-email: oilbeen@snu.ac.kr
+Requires-Python: >=3.8
+License-File: LICENSE
