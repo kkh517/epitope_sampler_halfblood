@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 
 class FocalLoss(nn.Module):
-    def __init__(self, alpha=None, gamma=2.0, reduction='none'):
+    def __init__(self, alpha=None, gamma=1.5, reduction='none'):
         """
         Focal Loss 구현
         alpha: 클래스 가중치 (불균형 보정)

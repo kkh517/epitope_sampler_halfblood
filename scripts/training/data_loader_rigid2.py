@@ -113,8 +113,8 @@ def set_data_loader_params(args):
         # "TEST_HL_AG_LIST" : "/home/kkh517/test_set_id.json", # new_test
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/test_set_id.json", # iitp
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/inference_lj/test_set_id.json",
-        # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu01_dict.json", # new_test gpu01
-        "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu02_dict.json", # new_test gpu02
+        "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu01_dict2.json", # new_test gpu01
+        # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu02_dict.json", # new_test gpu02
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/ag_dict.json",
         "TEST_ALL_TRAIN" : '/home/kkh517/Github/rf-abag-templ/DB/test_json/cluster_info/train_all_id.json',
         "VAL_NEG": f"{ABAG_DIR}/negative_val.json", 

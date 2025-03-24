@@ -368,7 +368,8 @@ def get_args_inference():
     inference_group.add_argument("-epitope_idx", default='', type=str, help="epitope residue of antigen e.g. [2,3,4]")
     inference_group.add_argument("-item",default='abcd_H_L_A', type=str, help="pdb_id - heavy - light - antigen e.g. abcd_H_L_A")
     inference_group.add_argument("-model", default=default_model, help="Model weights. [weights/RF2_jan24.pt]")
-    inference_group.add_argument("-output_prefix", default='.', type=str, help="output path")
+    inference_group.add_argument("-output_prefix", default='./default', type=str, help="output path")
+#     inference_group.add_argument("-seq_idx", default='0', type=int, help="sequence name as int?")
     # parse arguments
     
     args = parser.parse_args()

@@ -124,8 +124,8 @@ class Predictor:
             if True:
                 i_epi_res = 999
                 epitope_info = surface_info
-                os.makedirs(f"{self.output_prefix}/templates_check", exist_ok=True)
-                write_pdb(msa[:,0,0][0], xyz_prev[0], L_s=L_s[0], Bfacts=epitope_info[0].bool(),prefix=f"{self.output_prefix}/templates_check/{item}_templates_{i_epi_res}th_epi") #ProjectName
+                # os.makedirs(f"{self.output_prefix}/templates_check", exist_ok=True)
+                # write_pdb(msa[:,0,0][0], xyz_prev[0], L_s=L_s[0], Bfacts=epitope_info[0].bool(),prefix=f"{self.output_prefix}/templates_check/{item}_templates_{i_epi_res}th_epi") #ProjectName
 
 
 
@@ -173,14 +173,14 @@ class Predictor:
                             _, final_crds = self.xyz_converter.compute_all_atom(
                                 msa[:, i_cycle, 0], pred_crds[-1], alphas[-1]
                             )
-                            if i_cycle % 4 == 3:
-                                write_pdb(
-                                    msa[:, i_cycle, 0][0],
-                                    final_crds[0],
-                                    L_s[0],
-                                    Bfacts=plddt_unbinned[0],
-                                    prefix=f"{self.output_prefix}/{i_epi_res}th_epi_{item}_{i_cycle}",       
-                                )
+                            # if i_cycle % 4 == 3:
+                            #     write_pdb(
+                            #         msa[:, i_cycle, 0][0],
+                            #         final_crds[0],
+                            #         L_s[0],
+                            #         Bfacts=plddt_unbinned[0],
+                            #         prefix=f"{self.output_prefix}/{i_epi_res}th_epi_{item}_{i_cycle}",       
+                            #     )
                             continue
                         else:
                             
@@ -190,13 +190,15 @@ class Predictor:
                                 final_crds[0],
                                 L_s[0],
                                 Bfacts=plddt_unbinned[0],
-                                prefix=f"{self.output_prefix}/{i_epi_res}th_epi_{item}_{i_cycle}",
+                                # prefix=f"{self.output_prefix}/{i_epi_res}th_epi_{item}_{i_cycle}",
+                                prefix = f"{args.output_prefix}"
                             )
                             sys.stdout.write(f"\r{item} inference done")
                             # os.makedirs(f"inference_pdb/{self.model_name}_{self.model_subname}_After210930/{item[0]}/{i_epi_res}th_epi_{item[0]}", exist_ok=True)
                             # os.system(f"mv {i_epi_res}th_epi_{item[0]}_{i_cycle}.pdb inference_pdb/{self.model_name}_{self.model_subname}_After210930/{item[0]}/{i_epi_res}th_epi_{item[0]}")
                             # os.makedirs(f"inference_pdb/iitp/{item[0]}", exist_ok=True)
                             # os.system(f"mv {i_epi_res}th_epi_{item[0]}_{i_cycle}.pdb inference_pdb/iitp/{item[0]}/{i_epi_res}th_epi_{item[0]}.pdb")# iitp
+                            # os.system(f"mv ")
                             count += 1
 
                         # true_crds_2, mask_crds_2 = resolve_equiv_natives(pred_crds[-1], true_crds, mask_crds)
@@ -281,10 +283,17 @@ class Predictor:
                         # write interface_pae_mean on plt.imshow
                         # plt.text(0, 0, f"interface_pae_mean: {interface_pae_mean:.2f}", fontsize=12, color='black')
                         print(f'{item} interface_pae_mean: {interface_pae_mean:.2f}')
-                        pae_dict[str(item)][f"{i_epi_res}th_epi"] = interface_pae_mean
+                        # pae_dict[str(item)][f"{i_epi_res}th_epi"] = interface_pae_mean
+                        # /home/kkh517/submit_files/Project/epitope_sampler_halfblood/antibody_meeting_inputs/Trastuzumab_Abmpnn_output/100th_AbMPNN_Trastuzumab_seq_pae.csv
+                        pae_dict[str(item)][self.output_prefix.split('/')[-1]] = interface_pae_mean
 
             # os.makedirs(f"inference_pdb/{self.model_name}_{self.model_subname}_After210930/{item[0]}", exist_ok=True)
-            with open(f"{self.output_prefix}/{str(i_epi_res+1)}_{item}_pae_dict.csv", 'w') as f:
+            # with open(f"{self.output_prefix}/{str(i_epi_res+1)}_{item}_pae_dict.csv", 'w') as f:
+            output_dir = '/'.join(self.output_prefix.split('/')[:-1])+'/output'
+            os.makedirs(output_dir, exist_ok=True)
+            file_path = f"{output_dir}/pae.csv"
+            write_mode = 'a' if os.path.exists(file_path) else 'w'
+            with open(file_path, write_mode) as f:
                 writer = csv.writer(f)
                 for key, value in pae_dict[str(item)].items():
                     writer.writerow([key, float(value)])
@@ -505,7 +514,7 @@ class Predictor:
             epitope_center = epitope_xyz[:,1].mean(dim=0)
             xyz_t[:,:interface_split[0]] += epitope_center
             # os.makedirs(f"templates_check", exist_ok=True)
-            write_pdb(seq, atoms, L_s=L_s, Bfacts=epi_t,prefix=f"{self.output_prefix}/templates_{item}") #ProjectName
+            # write_pdb(seq, atoms, L_s=L_s, Bfacts=epi_t,prefix=f"{self.output_prefix}/templates_{item}") #ProjectName
         # def sel
         sel = torch.arange(sum(L_s))
         L_s= torch.Tensor(L_s)
