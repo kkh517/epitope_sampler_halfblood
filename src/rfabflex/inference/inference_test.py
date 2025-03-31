@@ -30,7 +30,7 @@ USE_AMP = True
 class Predictor:
     def __init__(self, model_name="RF2_apr23",interactive=False, model_param={}, loader_param={}, crop_size=256, maxcycle=4):
         self.model_name = model_name
-        self.model_subname = "1.1.0"#"blur_lj"#"sc_lj"#"samechain"#"on_rigid" #"on_RF2"
+        self.model_subname = "1.2.1"#"blur_lj"#"sc_lj"#"samechain"#"on_rigid" #"on_RF2"
         self.interactive = interactive
         self.model_param = model_param
         # print(f"model_param \n{model_param}")
@@ -55,7 +55,7 @@ class Predictor:
         # if "MASTER_ADDR" in os.environ:
         os.environ["MASTER_ADDR"] = "localhost"
         # if "MASTER_PORT" in os.environ:
-        os.environ["MASTER_PORT"] = "12777"
+        os.environ["MASTER_PORT"] = "12779"
         if (
             not self.interactive
             and "SLURM_NTASKS" in os.environ
@@ -125,9 +125,9 @@ class Predictor:
                     # cond = torch.cdist(antigen_crds, antigen_crds) < 20 # epitope radius를 20까지 늘리고, epitope info를 나중에 재 정의
                     epitope_info = cond[0,i_epi_res].float().unsqueeze(0)
                     epitope_info = torch.cat((torch.zeros(1,interface_split[0]).to(epitope_info.device), epitope_info), dim=1).long()
-                    overlap = torch.logical_and(surface_info[0] == 1, epitope_info[0] == 1).sum()
-                    total_epi = (surface_info[0] == 1).sum()
-                    overlap_ratio = float(overlap) / float(total_epi) if total_epi > 0 else 0
+                    # overlap = torch.logical_and(surface_info[0] == 1, epitope_info[0] == 1).sum()
+                    # total_epi = (surface_info[0] == 1).sum()
+                    # overlap_ratio = float(overlap) / float(total_epi) if total_epi > 0 else 0
                     
                 # if True:
                 #     i_epi_res = 999
@@ -330,33 +330,41 @@ class Predictor:
                             # distogram_loss = calc_c6d_loss(logit_s, c6d, mask_2d)
                             # breakpoint()
                             # distogram_loss = calc_c6d_loss(logit_s, c6d, (~same_chain.bool())*mask_2d)
-                            num_classes=37
-                            class_counts = torch.bincount(c6d[..., 0].view(-1), minlength=num_classes)
-                            weights = len(c6d[..., 0].view(-1))/(num_classes*class_counts.float())
-                            criterion = FocalLoss(alpha=weights)
-                            distogram_loss = criterion(logit_s[0], c6d[..., 0])
                             # breakpoint()
-                            distogram_loss = (~same_chain.bool() * distogram_loss).sum() / ((~same_chain.bool()).sum() + 1e-5)
-                            distogram_loss = distogram_loss.item()
+                            # breakpoint()
+                            # epitope_mask = epitope_info[:,:,None] + epitope_info[:,None,:]
+                            epitope_mask = torch.cdist(true_crds[0,0,:,1], true_crds[0,0,:,1])<10
+                            distogram_mask = epitope_mask * (~same_chain.bool()) * mask_2d
+                            distogram_loss = calc_c6d_loss(logit_s, c6d, distogram_mask)[0]
+                            num_classes=37
+                            class_counts = torch.bincount((c6d[..., 0]*distogram_mask).view(-1), minlength=num_classes)
+                            weights = len((c6d[..., 0]*distogram_mask).view(-1))/(num_classes*class_counts.float()+1e-5)
+                            criterion = FocalLoss(alpha=weights)
+                            focal_loss = criterion(logit_s[0], c6d[..., 0])
+                            # # breakpoint()
+                            focal_loss = (distogram_mask.bool() * focal_loss).sum() / ((~distogram_mask.bool()).sum() + 1e-5)
+                            # distogram_loss = distogram_loss.item()
+                            focal_loss = focal_loss.item()
                             # breakpoint()
                             print(f'{str(i_epi_res+1)}th_epi_{item[0]} interface_pae_mean: {interface_pae_mean:.2f}')
-                            print(f'{str(i_epi_res+1)}th_epi_{item[0]} distogram_loss: {distogram_loss}')
-                            pae_dict[str(item[0])][f"{str(i_epi_res+1)}th_epi"] = [interface_pae_mean,distogram_loss, overlap_ratio]
-                            if logit_s is not None:
-                                expected_dist = np.einsum('ljk, l -> jk', probab[0], dbins)
-                                distogram_true = c6d_true[..., 0][0].float().cpu().numpy()
-                                distogram_pred = c6d_pred[..., 0][0].float().cpu().numpy()
-                                np.savez(
-                                    f"inference_pdb/{self.model_name}_{self.model_subname}_After210930_ES/{item[0]}/{str(i_epi_res+1)}th_epi_{item[0]}/logit_s_0.npz",
-                                    logit_s_0=logit_s[0].float().cpu().numpy(),
-                                    expected_dist=expected_dist,
-                                    distogram_true=distogram_true,
-                                    distogram_pred=distogram_pred
-                                )
+                            print(f'{str(i_epi_res+1)}th_epi_{item[0]} distogram_loss: {distogram_loss.item()}')
+                            pae_dict[str(item[0])][f"{str(i_epi_res+1)}th_epi"] = [interface_pae_mean, distogram_loss.item(), focal_loss]
+                            # if logit_s is not None:
+                            #     expected_dist = np.einsum('ljk, l -> jk', probab[0], dbins)
+                            #     distogram_true = c6d_true[..., 0][0].float().cpu().numpy()
+                            #     distogram_pred = c6d_pred[..., 0][0].float().cpu().numpy()
+                            #     np.savez(
+                            #         f"inference_pdb/{self.model_name}_{self.model_subname}_After210930_ES/{item[0]}/{str(i_epi_res+1)}th_epi_{item[0]}/logit_s_0.npz",
+                            #         logit_s_0=logit_s[0].float().cpu().numpy(),
+                            #         expected_dist=expected_dist,
+                            #         distogram_true=distogram_true,
+                            #         distogram_pred=distogram_pred
+                            #     )
                             # breakpoint()
                             
                 # breakpoint()
                 os.makedirs(f"inference_pdb/{self.model_name}_{self.model_subname}_After210930_ES/{item[0]}", exist_ok=True)
+                # breakpoint()
                 with open(f"inference_pdb/{self.model_name}_{self.model_subname}_After210930_ES/{item[0]}/pae_dict.csv", 'w') as f: #new_test
                 # os.makedirs(f"inference_pdb/{self.model_name}_{self.model_subname}_DockingSet_ES_reepi/{item[0]}", exist_ok=True)
                 # with open(f"inference_pdb/{self.model_name}_{self.model_subname}_DockingSet_ES_reepi/{item[0]}/pae_dict.csv", 'w') as f:    # docking set
@@ -370,7 +378,8 @@ class Predictor:
         if model_name == "RF2_apr23":
             chk_fn = (f"/home/yubeen/rf_abag_templ/results/0919_test/models/weights/RF2_apr23.pt")
         else:
-            chk_fn = f"/home/kkh517/submit_files/Project/halfblood/models_{self.model_subname}/RF2_apr23_best.pt"
+            # chk_fn = f"/home/kkh517/submit_files/Project/halfblood/models_{self.model_subname}/RF2_apr23_best.pt"
+            chk_fn = "/home/kkh517/submit_files/Project/halfblood/models/RF2_apr23_best.pt"
             # chk_fn = f"/home/kkh517/submit_files/Project/halfblood/models_blur_lj/RF2_apr23_best.pt"
             # chk_fn = "/home/kkh517/submit_files/Project/halfblood/models_1.1.0/RF2_apr23_best.pt"
 

@@ -100,7 +100,7 @@ class Predictor:
                 interface_split,
                 surface_info,
             ) = self._prepare_input(inputs, gpu)
-
+            # breakpoint()
             # if os.path.exists(f"/home/kkh517/submit_files/Project/inference_fullepi/inference_pdb/inference_pdbs_OnlyRigid_lj/{item[0]}/pae_dict.csv"):
             #     continue
             # epitope_info : surface_residue on antigen protein

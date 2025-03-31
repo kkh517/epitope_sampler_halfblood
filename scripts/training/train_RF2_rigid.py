@@ -857,7 +857,7 @@ class Trainer:
                     interface_split,
                     epitope_info,
                 ) = self._prepare_input(inputs, gpu)
-
+                # breakpoint()
                 N_cycle = self.maxcycle
 
                 output_i = (None, None, None, xyz_prev, None, mask_recycle)

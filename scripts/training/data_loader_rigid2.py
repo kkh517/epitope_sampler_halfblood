@@ -77,8 +77,8 @@ def put_CDR_mask(xyz_t: torch.Tensor, f1d_t:torch.Tensor, mask_t:torch.Tensor, C
     CDR_mask_mask = CDR_mask.unsqueeze(-1).repeat(1,1,27)
     mask_t = torch.where(CDR_mask_mask == 1,torch.full_like(mask_t,0),mask_t)
     # breakpoint()
-    xyz_t = center_and_realign_missing(xyz_t[0], mask_t[0])
-    xyz_t = xyz_t.unsqueeze(0)
+    # xyz_t = center_and_realign_missing(xyz_t[0], mask_t[0])
+    # xyz_t = xyz_t.unsqueeze(0)
     # mask_t = torch.where(CDR_mask == 1,torch.full_like(mask_t,0),mask_t)    
     
 
@@ -113,7 +113,7 @@ def set_data_loader_params(args):
         # "TEST_HL_AG_LIST" : "/home/kkh517/test_set_id.json", # new_test
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/test_set_id.json", # iitp
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/inference_lj/test_set_id.json",
-        "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu01_dict2.json", # new_test gpu01
+        "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu01_dict.json", # new_test gpu01
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu02_dict.json", # new_test gpu02
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/ag_dict.json",
         "TEST_ALL_TRAIN" : '/home/kkh517/Github/rf-abag-templ/DB/test_json/cluster_info/train_all_id.json',
@@ -988,10 +988,9 @@ def get_epi_full(
     # cond = torch.cdist(xyz[len_s[0] : , 1], xyz[len_s[0]:, 1]) < cutoff
     # print('cond check', cond.sum())
     cond = cond.to(device); mask = mask.to(device)
-    cond = torch.logical_and(
-        cond, mask[: len_s[0], None, 1] * mask[None, len_s[0]:, 1]
+    cond = torch.logical_and(cond, mask[: len_s[0], None, 1] * mask[None, len_s[0]:, 1])
         #cond, mask[len_s[:1].sum()+1 : , None, 1] * mask[None, :len_s[:1].sum()+1:, 1]
-    )
+    # )
     # print('cond check again', cond.sum())
     i, j = torch.where(cond)
     # j = j + len_s[0]
@@ -1248,7 +1247,7 @@ def merge_a3m_antibody(a3m, homo_list):
     ins_dict = defaultdict(list)
     chain_count = 0
     
-    for i, ch in enumerate(homo_list):  
+    for i, ch in enumerate(homo_list):   # TO DO : homomer에 대해서도 heteromer로 바꿔서 block diagonal로 돌리기
         # ex) homo_list = [[0], [1, 2], [3, 5], [4]]
         for j in ch:
             L_s_dict[j] = L_s[i]
@@ -1776,7 +1775,7 @@ def CustomTemplFeaturize_kh(item,tplts, L_s, antibody=True):
     with open('/home/kkh517/benchmark_set_after210930/testset_CDR.pkl', 'rb') as f: # new_test
         testset_CDR = pickle.load(f)
     cdr_mask = ~testset_CDR[item]['CDR'].bool().unsqueeze(-1)
-    # cdr_mask = torch.ones_like(cdr_mask) # for rigid body
+    cdr_mask = torch.ones_like(cdr_mask) # for rigid body
 
 
     # print(f"cdr_mask {cdr_mask.shape}")
@@ -1823,7 +1822,8 @@ def CustomTemplFeaturize_kh(item,tplts, L_s, antibody=True):
                             try:
                                 conf[idx] = float(line[60:66])/100.0
                                 seq[idx] = aa_idx
-                                if conf[idx] < 0.8: continue 
+                                # if conf[idx] < 0.8: continue 
+                                if conf[idx] < 0.8: conf[idx] = 0.3
                                 xyz[idx, i_atm,:] = torch.tensor([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                                 xyz_for_mask[idx, i_atm,:] = torch.tensor([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                                 
@@ -1844,17 +1844,17 @@ def CustomTemplFeaturize_kh(item,tplts, L_s, antibody=True):
 
         mask = torch.logical_not(torch.isnan(xyz_for_mask[:,:,0]))
         # Feb 6 update
-        if antibody != None:
-            if item.split('_')[2] == '#':
-                mask = mask * cdr_mask[:L_s[0]]
-            else:
-                mask = mask * cdr_mask[:sum(L_s[:2])]
+        # if antibody != None:
+        #     if item.split('_')[2] == '#':
+        #         mask = mask * cdr_mask[:L_s[0]]
+        #     else:
+        #         mask = mask * cdr_mask[:sum(L_s[:2])]
             # print(f"item : {item}, mask : {mask.shape}, cdr_mask : {cdr_mask.shape}")
         # print(f"item : {item} xyz : {xyz.shape}, mask : {mask.shape}")
         # breakpoint()
-        # if item.startswith('7vgr') : breakpoint()
+        # if (item.startswith('8djm')) & (antibody == None) : breakpoint()
         try:
-            xyz = center_and_realign_missing(xyz[0], mask[0]).unsqueeze(0)
+            xyz = center_and_realign_missing(xyz, mask)
         except Exception as e:
             print(f"{item} line 1869 error \n{e}")
         # xyz = center_and_realign_missing(xyz, mask)
@@ -2022,7 +2022,8 @@ def TemplFeaturize_Tlqkf(item,tplts, L_s, antibody=True):
                             try:
                                 conf[idx] = float(line[60:66])/100.0
                                 seq[idx] = aa_idx
-                                if conf[idx] < 0.8: continue 
+                                # if conf[idx] < 0.8: continue 
+                                if conf[idx] < 0.8: conf[idx]=0.1
                                 xyz[idx, i_atm,:] = torch.tensor([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                                 xyz_for_mask[idx, i_atm,:] = torch.tensor([float(line[30:38]), float(line[38:46]), float(line[46:54])])
                                 
@@ -2068,9 +2069,9 @@ def TemplFeaturize_Tlqkf(item,tplts, L_s, antibody=True):
 
 
     # put_cdr_mask
-    cdr_mask = ~cdr_mask.bool()[0]
+    # cdr_mask = ~cdr_mask.bool()[0]
     
-    xyz, t1d, mask = put_CDR_mask(xyz, t1d, mask, cdr_mask)
+    # xyz, t1d, mask = put_CDR_mask(xyz, t1d, mask, cdr_mask)
     # xyz = center_and_realign_missing(xyz[0], mask[0]).unsqueeze(0)
     return xyz, t1d, mask
 
@@ -2312,14 +2313,14 @@ def featurize_antibody_complex_kh(
         ins = torch.cat((ins[:1, :], ins[1:, :][msa_sel]), dim=0)
  
     # read csv file into dictionary
-    tm_dict = {}
-    # read csv file into dictionary
-    with open(params['TM_DB'], mode='r') as infile:
-        reader = csv.reader(infile)
-        for rows in reader:
-            if rows[0] == 'template':
-                continue
-            tm_dict[rows[0]] = rows[1]
+    # tm_dict = {}
+    # # read csv file into dictionary
+    # with open(params['TM_DB'], mode='r') as infile:
+    #     reader = csv.reader(infile)
+    #     for rows in reader:
+    #         if rows[0] == 'template':
+    #             continue
+    #         tm_dict[rows[0]] = rows[1]
 
     
     
@@ -2537,6 +2538,7 @@ def featurize_antibody_complex_kh(
     # epi_full = get_surface(params, interface_split, item)
     # epi_full [B, L]
     #putting the epitope center
+    # breakpoint()
     if epi_full.sum() != 0:
         epi_idx = epi_full.nonzero().squeeze()
         new_epi_idx = epi_idx
