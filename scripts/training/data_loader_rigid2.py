@@ -113,8 +113,8 @@ def set_data_loader_params(args):
         # "TEST_HL_AG_LIST" : "/home/kkh517/test_set_id.json", # new_test
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/test_set_id.json", # iitp
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/inference_lj/test_set_id.json",
-        "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu01_dict.json", # new_test gpu01
-        # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu02_dict.json", # new_test gpu02
+        # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu01_dict.json", # new_test gpu01
+        "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/gpu02_dict.json", # new_test gpu02
         # "TEST_HL_AG_LIST" : "/home/kkh517/submit_files/Project/epitope_sampler_halfblood/ag_dict.json",
         "TEST_ALL_TRAIN" : '/home/kkh517/Github/rf-abag-templ/DB/test_json/cluster_info/train_all_id.json',
         "VAL_NEG": f"{ABAG_DIR}/negative_val.json", 
@@ -1802,6 +1802,7 @@ def CustomTemplFeaturize_kh(item,tplts, L_s, antibody=True):
             temp_lines = lines.readlines()
             atom_lines = [line for line in temp_lines if line[:4] == 'ATOM']
             # print(f"atom_lines {atom_lines}")
+            # if (item == '8qf4_E_#_A') and (antibody == None) : breakpoint()
             prev_chain = atom_lines[0][21] ; before_chain_len = 0
             for line in temp_lines:
                 if line[:4] == 'ATOM':
@@ -2329,8 +2330,9 @@ def featurize_antibody_complex_kh(
     # tplts = get_tplts(item,params)
     # tplts = {'H': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/new_ab_block.pdb'], 'L': None, 'AG': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/new_ag_block.pdb']} # new_test
     # tplts = {""}
-    # tplts = {'H': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/af3_new_ab_block.pdb'], 'L': None, 'AG': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/{item}_af3_ag_block.pdb']} # new_test
-    tplts = {'H': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/af3_new_ab_block.pdb'], 'L': None, 'AG': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/{item}_af3_ag_block_new.pdb']} # new_test
+    
+    tplts = {'H': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/af3_new_ab_block.pdb'], 'L': None, 'AG': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/{item}_af3_ag_block_new.pdb']} # new_test #model_ag
+    # tplts = {'H': [f'/home/kkh517/alphafold2.3_ab_benchmark/{item}/af3_new_ab_block.pdb'], 'L': None, 'AG': [f'/home/kkh517/benchmark_set_after210930_ag/{item}/new_ag.pdb']} # true_ag
     # tplts = {'H': [f'/home/yubeen/alphafold2.3_monomer/{item}/{item}_ab/ranked_0.pdb'], 'L':None, 'AG':[f"/home/yubeen/alphafold2.3_monomer/{item}/{item}_ag/ranked_0.pdb"]}
     # tplts = {'H': ["/home/kkh517/submit_files/Project/epitope_sampler_halfblood/iitp_inputs/ab_block.pdb"], 'L':None, 'AG':["/home/kkh517/submit_files/Project/epitope_sampler_halfblood/iitp_inputs/ag_block.pdb"]} #iitp
 

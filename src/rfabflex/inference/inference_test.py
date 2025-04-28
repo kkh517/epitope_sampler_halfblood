@@ -30,7 +30,7 @@ USE_AMP = True
 class Predictor:
     def __init__(self, model_name="RF2_apr23",interactive=False, model_param={}, loader_param={}, crop_size=256, maxcycle=4):
         self.model_name = model_name
-        self.model_subname = "1.2.1"#"blur_lj"#"sc_lj"#"samechain"#"on_rigid" #"on_RF2"
+        self.model_subname = "1.8.0"#"1.1.0"#"blur_lj"#"sc_lj"#"samechain"#"on_rigid" #"on_RF2"
         self.interactive = interactive
         self.model_param = model_param
         # print(f"model_param \n{model_param}")
@@ -55,7 +55,7 @@ class Predictor:
         # if "MASTER_ADDR" in os.environ:
         os.environ["MASTER_ADDR"] = "localhost"
         # if "MASTER_PORT" in os.environ:
-        os.environ["MASTER_PORT"] = "12779"
+        os.environ["MASTER_PORT"] = "12783"
         if (
             not self.interactive
             and "SLURM_NTASKS" in os.environ
@@ -132,9 +132,15 @@ class Predictor:
                 # if True:
                 #     i_epi_res = 999
                 #     epitope_info = surface_info
-                    
-                    write_pdb(msa[:,0,0][0], xyz_prev[0], L_s=L_s[0], Bfacts=epitope_info[0].bool(),prefix=f"templates_check/{item[0]}_templates_{str(i_epi_res+1)}th_epi") #ProjectName
-
+                #     # breakpoint()
+                #     show_proportion = 0.1
+                #     true_indices = torch.where(epitope_info)[1]
+                #     indices_to_convert = torch.randperm(len(true_indices))[
+                #         :int(show_proportion * len(true_indices))
+                #     ]
+                #     indices_to_convert = true_indices[indices_to_convert]
+                #     epitope_info[0][indices_to_convert] = 0
+                #     write_pdb(msa[:,0,0][0], xyz_prev[0], L_s=L_s[0], Bfacts=epitope_info[0].bool(),prefix=f"templates_check/{item[0]}_templates_{str(i_epi_res+1)}th_epi") #ProjectName
 
 
                     # print('epitope_info',epitope_info)
@@ -378,8 +384,8 @@ class Predictor:
         if model_name == "RF2_apr23":
             chk_fn = (f"/home/yubeen/rf_abag_templ/results/0919_test/models/weights/RF2_apr23.pt")
         else:
-            # chk_fn = f"/home/kkh517/submit_files/Project/halfblood/models_{self.model_subname}/RF2_apr23_best.pt"
-            chk_fn = "/home/kkh517/submit_files/Project/halfblood/models/RF2_apr23_best.pt"
+            chk_fn = f"/home/kkh517/submit_files/Project/halfblood/models_{self.model_subname}/RF2_apr23_best.pt"
+            # chk_fn = "/home/kkh517/submit_files/Project/halfblood/models/RF2_apr23_best.pt"
             # chk_fn = f"/home/kkh517/submit_files/Project/halfblood/models_blur_lj/RF2_apr23_best.pt"
             # chk_fn = "/home/kkh517/submit_files/Project/halfblood/models_1.1.0/RF2_apr23_best.pt"
 
